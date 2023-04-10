@@ -56,9 +56,7 @@ class LocoNav(embodied.Env):
         if not again:
 
             def after_step(self, physics, random_state):
-                super(random_goal_maze.RepeatSingleGoalMaze, self).after_step(
-                    physics, random_state
-                )
+                super(random_goal_maze.RepeatSingleGoalMaze, self).after_step(physics, random_state)
                 self._rewarded_this_step = self._target.activated
                 self._targets_obtained = int(self._target.activated)
 

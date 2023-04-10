@@ -29,9 +29,7 @@ def main(argv=None):
         config = config.update(agt.Agent.configs[name])
     config = embodied.Flags(config).parse(other)
     args = embodied.Config(
-        **config.run,
-        logdir=config.logdir,
-        batch_steps=config.batch_size * config.batch_length
+        **config.run, logdir=config.logdir, batch_steps=config.batch_size * config.batch_length
     )
     print(config)
 
@@ -64,9 +62,7 @@ def main(argv=None):
             eval_env = make_envs(config)  # mode='eval'
             cleanup += [env, eval_env]
             agent = agt.Agent(env.obs_space, env.act_space, step, config)
-            embodied.run.train_eval(
-                agent, env, eval_env, replay, eval_replay, logger, args
-            )
+            embodied.run.train_eval(agent, env, eval_env, replay, eval_replay, logger, args)
 
         elif args.script == "train_holdout":
             replay = make_replay(config, logdir / "replay")

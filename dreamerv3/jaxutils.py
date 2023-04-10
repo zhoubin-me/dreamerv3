@@ -153,9 +153,7 @@ class SymlogDist:
 
 
 class DiscDist:
-    def __init__(
-        self, logits, dims=0, low=-20, high=20, transfwd=symlog, transbwd=symexp
-    ):
+    def __init__(self, logits, dims=0, low=-20, high=20, transfwd=symlog, transbwd=symexp):
         self.logits = logits
         self.probs = jax.nn.softmax(logits)
         self.dims = tuple([-x for x in range(1, dims + 1)])
@@ -189,9 +187,7 @@ class DiscDist:
             jax.nn.one_hot(below, len(self.bins)) * weight_below[..., None]
             + jax.nn.one_hot(above, len(self.bins)) * weight_above[..., None]
         )
-        log_pred = self.logits - jax.scipy.special.logsumexp(
-            self.logits, -1, keepdims=True
-        )
+        log_pred = self.logits - jax.scipy.special.logsumexp(self.logits, -1, keepdims=True)
         return (target * log_pred).sum(-1).sum(self.dims)
 
 
@@ -220,9 +216,7 @@ def balance_stats(dist, target, thres):
 
 
 class Moments(nj.Module):
-    def __init__(
-        self, impl="mean_std", decay=0.99, max=1e8, eps=0.0, perclo=5, perchi=95
-    ):
+    def __init__(self, impl="mean_std", decay=0.99, max=1e8, eps=0.0, perclo=5, perchi=95):
         self.impl = impl
         self.decay = decay
         self.max = max
@@ -365,9 +359,7 @@ class Optimizer(nj.Module):
                 optax.additive_weight_decay(
                     wd,
                     lambda params: (
-                        tree_map(
-                            lambda k: bool(wd_pattern.search(k)), tree_keys(params)
-                        )
+                        tree_map(lambda k: bool(wd_pattern.search(k)), tree_keys(params))
                     ),
                 )
             )
@@ -381,9 +373,7 @@ class Optimizer(nj.Module):
         self.scaling = COMPUTE_DTYPE == jnp.float16
         if self.scaling:
             self.opt = optax.apply_if_finite(self.opt, max_consecutive_errors=1000)
-            self.grad_scale = nj.Variable(
-                jnp.array, 1e4, jnp.float32, name="grad_scale"
-            )
+            self.grad_scale = nj.Variable(jnp.array, 1e4, jnp.float32, name="grad_scale")
             self.good_steps = nj.Variable(jnp.array, 0, jnp.int32, name="good_steps")
 
     def __call__(self, modules, lossfn, *args, has_aux=False, **kwargs):
@@ -397,9 +387,7 @@ class Optimizer(nj.Module):
             return loss, aux
 
         metrics = {}
-        loss, params, grads, aux = nj.grad(wrapped, modules, has_aux=True)(
-            *args, **kwargs
-        )
+        loss, params, grads, aux = nj.grad(wrapped, modules, has_aux=True)(*args, **kwargs)
         if not self.PARAM_COUNTS[self.path]:
             count = sum([np.prod(x.shape) for x in params.values()])
             print(f"Optimizer {self.name} has {count:,} variables.")
@@ -426,9 +414,7 @@ class Optimizer(nj.Module):
         return (metrics, aux) if has_aux else metrics
 
     def _update_scale(self, grads):
-        finite = jnp.array(
-            [jnp.isfinite(x).all() for x in jax.tree_util.tree_leaves(grads)]
-        ).all()
+        finite = jnp.array([jnp.isfinite(x).all() for x in jax.tree_util.tree_leaves(grads)]).all()
         keep = finite & (self.good_steps.read() < 1000)
         incr = finite & (self.good_steps.read() >= 1000)
         decr = ~finite
@@ -487,7 +473,5 @@ class SlowUpdater:
             k.replace(f"/{self.src.name}/", f"/{self.dst.name}/"): v
             for k, v in self.src.getm().items()
         }
-        self.dst.putm(
-            tree_map(lambda s, d: mix * s + (1 - mix) * d, source, self.dst.getm())
-        )
+        self.dst.putm(tree_map(lambda s, d: mix * s + (1 - mix) * d, source, self.dst.getm()))
         self.updates.write(updates + 1)

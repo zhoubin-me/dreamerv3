@@ -107,9 +107,7 @@ def train(agent, env, replay, logger, args):
     should_save(step)  # Register that we jused saved.
 
     print("Start training loop.")
-    policy = lambda *args: agent.policy(
-        *args, mode="explore" if should_expl(step) else "train"
-    )
+    policy = lambda *args: agent.policy(*args, mode="explore" if should_expl(step) else "train")
     while step < args.steps:
         driver(policy, steps=100)
         if should_save(step):

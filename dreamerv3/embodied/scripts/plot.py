@@ -124,10 +124,7 @@ def main():
     with gzip.open(filename, "w") as f:
         f.write(
             json.dumps(
-                [
-                    {**run, "xs": run["xs"].tolist(), "ys": run["ys"].tolist()}
-                    for run in runs
-                ]
+                [{**run, "xs": run["xs"].tolist(), "ys": run["ys"].tolist()} for run in runs]
             ).encode("utf-8")
         )
     console.print(f"Saved [green]{filename}[/green]")
@@ -145,9 +142,7 @@ def main():
         # ax.tick_params(axis='both', labelsize=7)  # TOFO
     for task, ax in zip(tasks, axes):
         for i, method in enumerate(methods):
-            relevant = [
-                run for run in runs if run["task"] == task and run["method"] == method
-            ]
+            relevant = [run for run in runs if run["task"] == task and run["method"] == method]
             if not relevant:
                 console.print(f"Missing {method} on {task}!", style="red")
                 continue
@@ -181,9 +176,7 @@ def main():
 
 def compute_stats(runs, stats, bins):
     extra_runs = []
-    select = lambda baselines, name: {
-        k: v[name] for k, v in baselines.items() if name in v
-    }
+    select = lambda baselines, name: {k: v[name] for k, v in baselines.items() if name in v}
     for stats in stats:
         if stats == "tasks":
             extra_runs += stats_num_tasks(runs, bins)
@@ -196,25 +189,19 @@ def compute_stats(runs, stats, bins):
             baselines = json.loads(path.read_text())
             mins = select(baselines, "random")
             maxs = select(baselines, "human_gamer")
-            extra_runs += stats_fixed_norm(
-                runs, bins, mins, maxs, "gamer_mean", np.nanmean
-            )
+            extra_runs += stats_fixed_norm(runs, bins, mins, maxs, "gamer_mean", np.nanmean)
         elif stats == "atari_median":
             path = pathlib.Path("~/scores/atari_baselines.json").expanduser()
             baselines = json.loads(path.read_text())
             mins = select(baselines, "random")
             maxs = select(baselines, "human_gamer")
-            extra_runs += stats_fixed_norm(
-                runs, bins, mins, maxs, "gamer_median", np.nanmedian
-            )
+            extra_runs += stats_fixed_norm(runs, bins, mins, maxs, "gamer_median", np.nanmedian)
         elif stats == "atari_record":
             path = pathlib.Path("~/scores/atari_baselines.json").expanduser()
             baselines = json.loads(path.read_text())
             mins = select(baselines, "random")
             maxs = select(baselines, "human_record")
-            extra_runs += stats_fixed_norm(
-                runs, bins, mins, maxs, "record_mean", np.nanmean
-            )
+            extra_runs += stats_fixed_norm(runs, bins, mins, maxs, "record_mean", np.nanmean)
         elif stats == "atari_record_clip":
             path = pathlib.Path("~/scores/atari_baselines.json").expanduser()
             baselines = json.loads(path.read_text())
@@ -256,9 +243,7 @@ def stats_self_norm(runs, bins, name="mean", aggregator=np.nanmean):
         mins[run["task"]] = min(mins.get(run["task"], np.inf), min(run["ys"]))
         maxs[run["task"]] = max(maxs.get(run["task"], -np.inf), max(run["ys"]))
     if bins <= 0:
-        borders = {
-            task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()
-        }
+        borders = {task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()}
     else:
         border = np.arange(0, max(lengths.values()) + 1e-8, bins)
         borders = {task: border for task, length in lengths.items()}
@@ -272,9 +257,7 @@ def stats_self_norm(runs, bins, name="mean", aggregator=np.nanmean):
                 task = run["task"]
                 if np.isclose(mins[task], maxs[task]):
                     continue
-                _, ys = binning(
-                    run["xs"], run["ys"], borders[task], np.nanmean, fill="last"
-                )
+                _, ys = binning(run["xs"], run["ys"], borders[task], np.nanmean, fill="last")
                 scores.append((ys - mins[task]) / (maxs[task] - mins[task]))
             if scores:
                 scores = np.array(scores)
@@ -298,9 +281,7 @@ def stats_fixed_norm(runs, bins, mins, maxs, name="mean", aggregator=np.nanmean)
     for run in runs:
         lengths[run["task"]] = max(lengths.get(run["task"], 0), max(run["xs"]))
     if bins <= 0:
-        borders = {
-            task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()
-        }
+        borders = {task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()}
     else:
         border = np.arange(0, max(lengths.values()) + 1e-8, bins)
         borders = {task: border for task, length in lengths.items()}
@@ -312,9 +293,7 @@ def stats_fixed_norm(runs, bins, mins, maxs, name="mean", aggregator=np.nanmean)
                 if not (run["method"] == method and run["seed"] == seed):
                     continue
                 task = run["task"]
-                _, ys = binning(
-                    run["xs"], run["ys"], borders[task], np.nanmean, fill="last"
-                )
+                _, ys = binning(run["xs"], run["ys"], borders[task], np.nanmean, fill="last")
                 if task == "atari_jamesbond" and "atari_james_bond" in mins:
                     task = "atari_james_bond"
                 scores.append((ys - mins[task]) / (maxs[task] - mins[task]))
@@ -339,9 +318,7 @@ def stats_num_tasks(runs, bins):
     for run in runs:
         lengths[run["task"]] = max(lengths.get(run["task"], 0), max(run["xs"]))
     if bins <= 0:
-        borders = {
-            task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()
-        }
+        borders = {task: np.linspace(0, length + 1e-8, 30) for task, length in lengths.items()}
     else:
         border = np.arange(0, max(lengths.values()) + 1e-8, bins)
         borders = {task: border for task, length in lengths.items()}
@@ -353,9 +330,7 @@ def stats_num_tasks(runs, bins):
                 if not (run["method"] == method and run["seed"] == seed):
                     continue
                 task = run["task"]
-                _, ys = binning(
-                    run["xs"], run["ys"], borders[task], np.nanmean, fill="nan"
-                )
+                _, ys = binning(run["xs"], run["ys"], borders[task], np.nanmean, fill="nan")
                 nonempty.append(np.isfinite(ys))
             if nonempty:
                 xs = np.linspace(0, 1, len(nonempty[0]))
@@ -398,9 +373,7 @@ def load_metrics(
             seed = f"{seed_prefix}_{seed}"
         if method_prefix:
             method = f"{method_prefix}_{method}"
-        runs.append(
-            {"task": task, "method": method, "seed": seed, "filename": filename}
-        )
+        runs.append({"task": task, "method": method, "seed": seed, "filename": filename})
     console.print(f"Loading {len(runs)} runs from [green]{directory}[/green]...")
     jobs = [functools.partial(load_run, run, xaxis, yaxis, yaxis2) for run in runs]
     if workers > 1:
@@ -435,9 +408,7 @@ def load_run(run, xaxis, yaxis, yaxis2):
         run["ys"] = df[yaxis].to_numpy()
         return run
     except Exception as e:
-        console.print(
-            f'Exception loading {run["method"]} on {run["task"]}:\n {e}', style="red"
-        )
+        console.print(f'Exception loading {run["method"]} on {run["task"]}:\n {e}', style="red")
         return None
 
 
@@ -590,9 +561,7 @@ def parse_args(argv=None):
     parser.add_argument("--labels", nargs="+", default=[])
     parser.add_argument("--colors", type=str, nargs="+", default=["contrast"])
     parser.add_argument("--workers", type=int, default=12)
-    parser.add_argument(
-        "--stats", type=str, nargs="*", default=["mean", "median", "tasks"]
-    )
+    parser.add_argument("--stats", type=str, nargs="*", default=["mean", "median", "tasks"])
     args = parser.parse_args(argv)
     args.indirs = tuple([x.expanduser() for x in args.indirs])
     args.outdir = args.outdir.expanduser() / args.indirs[0].stem

@@ -185,13 +185,9 @@ class JAXAgent(embodied.Agent):
             check = tree_map(lambda x: len(x) % len(devices) == 0, value)
             if not all(jax.tree_util.tree_leaves(check)):
                 shapes = tree_map(lambda x: x.shape, value)
-                raise ValueError(
-                    f"Batch must by divisible by {len(devices)} devices: {shapes}"
-                )
+                raise ValueError(f"Batch must by divisible by {len(devices)} devices: {shapes}")
             # TODO: Avoid the reshape?
-            value = tree_map(
-                lambda x: x.reshape((len(devices), -1) + x.shape[1:]), value
-            )
+            value = tree_map(lambda x: x.reshape((len(devices), -1) + x.shape[1:]), value)
             shards = []
             for i in range(len(devices)):
                 shards.append(tree_map(lambda x: x[i], value))
@@ -218,9 +214,7 @@ class JAXAgent(embodied.Agent):
         elif mirror:
             return jax.device_put_replicated(self.rng.integers(high), devices)
         else:
-            return jax.device_put_sharded(
-                list(self.rng.integers(high, size=len(devices))), devices
-            )
+            return jax.device_put_sharded(list(self.rng.integers(high, size=len(devices))), devices)
 
     def _init_varibs(self, obs_space, act_space):
         varibs = {}

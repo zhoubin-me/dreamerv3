@@ -73,9 +73,7 @@ class Reverb:
         step = {k: embodied.convert(v) for k, v in step.items()}
         step["id"] = np.asarray(embodied.uuid(step.get("id")))
         if not self.server:
-            self.signature = {
-                k: ((self.length, *v.shape), v.dtype) for k, v in step.items()
-            }
+            self.signature = {k: ((self.length, *v.shape), v.dtype) for k, v in step.items()}
             self._create_server()
         step = {k: v for k, v in step.items() if not k.startswith("log_")}
         writer = self.writers[worker]

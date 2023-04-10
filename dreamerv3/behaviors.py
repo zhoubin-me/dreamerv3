@@ -16,9 +16,7 @@ class Greedy(nj.Module):
             critics = {"extr": agent.VFunction(rewfn, config, name="critic")}
         else:
             raise NotImplementedError(config.critic_type)
-        self.ac = agent.ImagActorCritic(
-            critics, {"extr": 1.0}, act_space, config, name="ac"
-        )
+        self.ac = agent.ImagActorCritic(critics, {"extr": 1.0}, act_space, config, name="ac")
 
     def initial(self, batch_size):
         return self.ac.initial(batch_size)

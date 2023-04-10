@@ -11,7 +11,9 @@ class Minecraft(embodied.Wrapper):
                 "wood": MinecraftWood,
                 "climb": MinecraftClimb,
                 "diamond": MinecraftDiamond,
-            }[task](*args, **kwargs)
+            }[
+                task
+            ](*args, **kwargs)
         )
 
 

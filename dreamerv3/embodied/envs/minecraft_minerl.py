@@ -73,9 +73,7 @@ class MineRLEnv(EnvSpec):
         return [
             handlers.POVObservation(self.resolution),
             handlers.FlatInventoryObservation(mc.ALL_ITEMS),
-            handlers.EquippedItemObservation(
-                mc.ALL_ITEMS, _default="air", _other="other"
-            ),
+            handlers.EquippedItemObservation(mc.ALL_ITEMS, _default="air", _other="other"),
             handlers.ObservationFromCurrentLocation(),
             handlers.ObservationFromLifeStats(),
         ]

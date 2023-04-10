@@ -46,13 +46,9 @@ def main():
     env = embodied.BatchEnv([env], parallel=False)
 
     agent = dreamerv3.Agent(env.obs_space, env.act_space, step, config)
-    replay = embodied.replay.Uniform(
-        config.batch_length, config.replay_size, logdir / "replay"
-    )
+    replay = embodied.replay.Uniform(config.batch_length, config.replay_size, logdir / "replay")
     args = embodied.Config(
-        **config.run,
-        logdir=config.logdir,
-        batch_steps=config.batch_size * config.batch_length
+        **config.run, logdir=config.logdir, batch_steps=config.batch_size * config.batch_length
     )
     embodied.run.train(agent, env, replay, logger, args)
     # embodied.run.eval_only(agent, env, logger, args)

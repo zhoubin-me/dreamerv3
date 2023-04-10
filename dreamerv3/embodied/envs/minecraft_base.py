@@ -39,10 +39,7 @@ class MinecraftBase(embodied.Env):
 
         # Observations
         self._inv_keys = [
-            k
-            for k in self._env.obs_space
-            if k.startswith("inventory/")
-            if k != "inventory/log2"
+            k for k in self._env.obs_space if k.startswith("inventory/") if k != "inventory/log2"
         ]
         self._step = 0
         self._max_inventory = None

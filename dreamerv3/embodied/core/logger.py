@@ -103,9 +103,7 @@ class TerminalOutput:
                 self._console.rule(f"[green bold]{self._name} (Step {step})")
             else:
                 self._console.rule(f"[green bold]Step {step}")
-            self._console.print(
-                " [blue]/[/blue] ".join(f"{k} {v}" for k, v in formatted.items())
-            )
+            self._console.print(" [blue]/[/blue] ".join(f"{k} {v}" for k, v in formatted.items()))
             print("")
         else:
             message = " / ".join(f"{k} {v}" for k, v in formatted.items())
@@ -147,10 +145,7 @@ class JSONLOutput(AsyncOutput):
             if len(value.shape) == 0 and self._pattern.search(name):
                 bystep[step][name] = float(value)
         lines = "".join(
-            [
-                json.dumps({"step": step, **scalars}) + "\n"
-                for step, scalars in bystep.items()
-            ]
+            [json.dumps({"step": step, **scalars}) + "\n" for step, scalars in bystep.items()]
         )
         with (self._logdir / self._filename).open("a") as f:
             f.write(lines)

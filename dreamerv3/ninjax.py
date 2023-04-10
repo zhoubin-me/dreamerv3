@@ -297,9 +297,7 @@ def scan(fun, carry, xs, reverse=False, unroll=1, modify=False):
 
         def inner(carry, x):
             x, rng = x
-            (carry, y), state = fun(
-                dict(context()), rng, carry, x, create=False, modify=False
-            )
+            (carry, y), state = fun(dict(context()), rng, carry, x, create=False, modify=False)
             return carry, y
 
         carry, ys = jax.lax.scan(inner, carry, (xs, rngs), length, reverse, unroll)
@@ -330,9 +328,7 @@ def scope(name, absolute=False):
     names of state entries unique."""
     global SCOPE
     if SCOPE is None:
-        raise RuntimeError(
-            "Purify stateful functions with fn = pure(fn) before running them."
-        )
+        raise RuntimeError("Purify stateful functions with fn = pure(fn) before running them.")
     outside = SCOPE
     if absolute:
         SCOPE = name
@@ -376,13 +372,9 @@ class ModuleMeta(type):
         """This runs once per use module instance creation. It derives a unique
         name and path for the module instance."""
         if not isinstance(name, str):
-            raise KeyError(
-                "Please provide a module name via Module(..., name='example')."
-            )
+            raise KeyError("Please provide a module name via Module(..., name='example').")
         if not re.match(r"[A-Za-z0-9_]+", name):
-            raise KeyError(
-                "Only letters, numbers, and underscores are allowed in scope names."
-            )
+            raise KeyError("Only letters, numbers, and underscores are allowed in scope names.")
         obj = cls.__new__(cls)
         with scope(name) as path:
             obj._path = path

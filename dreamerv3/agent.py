@@ -27,9 +27,7 @@ from . import ninjax as nj
 
 @jaxagent.Wrapper
 class Agent(nj.Module):
-    configs = yaml.YAML(typ="safe").load(
-        (embodied.Path(__file__).parent / "configs.yaml").read()
-    )
+    configs = yaml.YAML(typ="safe").load((embodied.Path(__file__).parent / "configs.yaml").read())
 
     def __init__(self, obs_space, act_space, step, config):
         self.config = config
@@ -62,9 +60,7 @@ class Agent(nj.Module):
         obs = self.preprocess(obs)
         (prev_latent, prev_action), task_state, expl_state = state
         embed = self.wm.encoder(obs)
-        latent, _ = self.wm.rssm.obs_step(
-            prev_latent, prev_action, embed, obs["is_first"]
-        )
+        latent, _ = self.wm.rssm.obs_step(prev_latent, prev_action, embed, obs["is_first"])
         self.expl_behavior.policy(latent, expl_state)
         task_outs, task_state = self.task_behavior.policy(latent, task_state)
         expl_outs, expl_state = self.expl_behavior.policy(latent, expl_state)
@@ -153,21 +149,15 @@ class WorldModel(nj.Module):
 
     def train(self, data, state):
         modules = [self.encoder, self.rssm, *self.heads.values()]
-        mets, (state, outs, metrics) = self.opt(
-            modules, self.loss, data, state, has_aux=True
-        )
+        mets, (state, outs, metrics) = self.opt(modules, self.loss, data, state, has_aux=True)
         metrics.update(mets)
         return state, outs, metrics
 
     def loss(self, data, state):
         embed = self.encoder(data)
         prev_latent, prev_action = state
-        prev_actions = jnp.concatenate(
-            [prev_action[:, None], data["action"][:, :-1]], 1
-        )
-        post, prior = self.rssm.observe(
-            embed, prev_actions, data["is_first"], prev_latent
-        )
+        prev_actions = jnp.concatenate([prev_action[:, None], data["action"][:, :-1]], 1)
+        post, prior = self.rssm.observe(embed, prev_actions, data["is_first"], prev_latent)
         dists = {}
         feats = {**post, "embed": embed}
         for name, head in self.heads.items():
@@ -361,9 +351,7 @@ class VFunction(nj.Module):
         if self.config.critic_slowreg == "logprob":
             reg = -dist.log_prob(sg(self.slow(traj).mean()))
         elif self.config.critic_slowreg == "xent":
-            reg = -jnp.einsum(
-                "...i,...i->...", sg(self.slow(traj).probs), jnp.log(dist.probs)
-            )
+            reg = -jnp.einsum("...i,...i->...", sg(self.slow(traj).probs), jnp.log(dist.probs))
         else:
             raise NotImplementedError(self.config.critic_slowreg)
         loss += self.config.loss_scales.slowreg * reg
@@ -374,9 +362,7 @@ class VFunction(nj.Module):
 
     def score(self, traj, actor=None):
         rew = self.rewfn(traj)
-        assert (
-            len(rew) == len(traj["action"]) - 1
-        ), "should provide rewards for all but last action"
+        assert len(rew) == len(traj["action"]) - 1, "should provide rewards for all but last action"
         discount = 1 - 1 / self.config.horizon
         disc = traj["cont"][1:] * discount
         value = self.net(traj).mean()

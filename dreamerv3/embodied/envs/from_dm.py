@@ -78,8 +78,6 @@ class FromDM(embodied.Env):
         elif hasattr(space, "minimum"):
             assert np.isfinite(space.minimum).all(), space.minimum
             assert np.isfinite(space.maximum).all(), space.maximum
-            return embodied.Space(
-                space.dtype, space.shape, space.minimum, space.maximum
-            )
+            return embodied.Space(space.dtype, space.shape, space.minimum, space.maximum)
         else:
             return embodied.Space(space.dtype, space.shape, None, None)

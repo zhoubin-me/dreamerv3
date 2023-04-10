@@ -221,17 +221,13 @@ class MultiEncoder(nj.Module):
     ):
         excluded = ("is_first", "is_last")
         shapes = {
-            k: v
-            for k, v in shapes.items()
-            if (k not in excluded and not k.startswith("log_"))
+            k: v for k, v in shapes.items() if (k not in excluded and not k.startswith("log_"))
         }
         self.cnn_shapes = {
             k: v for k, v in shapes.items() if (len(v) == 3 and re.match(cnn_keys, k))
         }
         self.mlp_shapes = {
-            k: v
-            for k, v in shapes.items()
-            if (len(v) in (1, 2) and re.match(mlp_keys, k))
+            k: v for k, v in shapes.items() if (len(v) in (1, 2) and re.match(mlp_keys, k))
         }
         self.shapes = {**self.cnn_shapes, **self.mlp_shapes}
         print("Encoder CNN shapes:", self.cnn_shapes)
@@ -248,9 +244,7 @@ class MultiEncoder(nj.Module):
     def __call__(self, data):
         some_key, some_shape = list(self.shapes.items())[0]
         batch_dims = data[some_key].shape[: -len(some_shape)]
-        data = {
-            k: v.reshape((-1,) + v.shape[len(batch_dims) :]) for k, v in data.items()
-        }
+        data = {k: v.reshape((-1,) + v.shape[len(batch_dims) :]) for k, v in data.items()}
         outputs = []
         if self.cnn_shapes:
             inputs = jnp.concatenate([data[k] for k in self.cnn_shapes], -1)
@@ -259,8 +253,7 @@ class MultiEncoder(nj.Module):
             outputs.append(output)
         if self.mlp_shapes:
             inputs = [
-                data[k][..., None] if len(self.shapes[k]) == 0 else data[k]
-                for k in self.mlp_shapes
+                data[k][..., None] if len(self.shapes[k]) == 0 else data[k] for k in self.mlp_shapes
             ]
             inputs = jnp.concatenate([x.astype(f32) for x in inputs], -1)
             inputs = jaxutils.cast_to_compute(inputs)
@@ -293,12 +286,8 @@ class MultiDecoder(nj.Module):
     ):
         excluded = ("is_first", "is_last", "is_terminal", "reward")
         shapes = {k: v for k, v in shapes.items() if k not in excluded}
-        self.cnn_shapes = {
-            k: v for k, v in shapes.items() if re.match(cnn_keys, k) and len(v) == 3
-        }
-        self.mlp_shapes = {
-            k: v for k, v in shapes.items() if re.match(mlp_keys, k) and len(v) == 1
-        }
+        self.cnn_shapes = {k: v for k, v in shapes.items() if re.match(cnn_keys, k) and len(v) == 3}
+        self.mlp_shapes = {k: v for k, v in shapes.items() if re.match(mlp_keys, k) and len(v) == 1}
         self.shapes = {**self.cnn_shapes, **self.mlp_shapes}
         print("Decoder CNN shapes:", self.cnn_shapes)
         print("Decoder MLP shapes:", self.mlp_shapes)
@@ -315,9 +304,7 @@ class MultiDecoder(nj.Module):
             else:
                 raise NotImplementedError(cnn)
         if self.mlp_shapes:
-            self._mlp = MLP(
-                self.mlp_shapes, mlp_layers, mlp_units, **mlp_kw, name="mlp"
-            )
+            self._mlp = MLP(self.mlp_shapes, mlp_layers, mlp_units, **mlp_kw, name="mlp")
         self._inputs = Input(inputs, dims="deter")
         self._image_dist = image_dist
 
@@ -665,9 +652,7 @@ class Linear(nj.Module):
 
     def __call__(self, x):
         shape = (x.shape[-1], np.prod(self._units))
-        kernel = self.get(
-            "kernel", Initializer(self._winit, self._outscale, fan=self._fan), shape
-        )
+        kernel = self.get("kernel", Initializer(self._winit, self._outscale, fan=self._fan), shape)
         kernel = jaxutils.cast_to_compute(kernel)
         x = x @ kernel
         if self._bias:

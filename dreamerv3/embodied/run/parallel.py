@@ -13,21 +13,13 @@ def parallel(agent, replay, logger, make_env, num_envs, args):
     timer.wrap("replay", replay, ["add", "save"])
     timer.wrap("logger", logger, ["write"])
     workers = []
-    workers.append(
-        embodied.distr.Thread(actor, step, agent, replay, logger, args.actor_addr, args)
-    )
-    workers.append(
-        embodied.distr.Thread(learner, step, agent, replay, logger, timer, args)
-    )
+    workers.append(embodied.distr.Thread(actor, step, agent, replay, logger, args.actor_addr, args))
+    workers.append(embodied.distr.Thread(learner, step, agent, replay, logger, timer, args))
     if num_envs == 1:
-        workers.append(
-            embodied.distr.Thread(env, make_env, args.actor_addr, 0, args, timer)
-        )
+        workers.append(embodied.distr.Thread(env, make_env, args.actor_addr, 0, args, timer))
     else:
         for i in range(num_envs):
-            workers.append(
-                embodied.distr.Process(env, make_env, args.actor_addr, i, args)
-            )
+            workers.append(embodied.distr.Process(env, make_env, args.actor_addr, i, args))
     embodied.distr.run(workers)
 
 

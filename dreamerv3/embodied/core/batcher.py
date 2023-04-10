@@ -8,9 +8,7 @@ import numpy as np
 
 
 class Batcher:
-    def __init__(
-        self, sources, workers=0, postprocess=None, prefetch_source=4, prefetch_batch=2
-    ):
+    def __init__(self, sources, workers=0, postprocess=None, prefetch_source=4, prefetch_batch=2):
         self._workers = workers
         self._postprocess = postprocess
         if workers:

@@ -76,9 +76,7 @@ class Generic:
         self.counters[worker] += 1
         if self.online:
             self.online_counters[worker] += 1
-            if len(stream) >= self.length and (
-                self.online_counters[worker] >= self.online_stride
-            ):
+            if len(stream) >= self.length and (self.online_counters[worker] >= self.online_stride):
                 self.online_queue.append(tuple(stream))
                 self.online_counters[worker] = 0
         if len(stream) < self.length or self.counters[worker] < self.stride:

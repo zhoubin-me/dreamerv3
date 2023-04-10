@@ -172,9 +172,7 @@ class Process:
         name = name or fn.__name__
         initializers = cloudpickle.dumps(self.initializers)
         args = (initializers,) + args
-        self._process = mp.Process(
-            target=self._wrapper, args=(Process.lock, fn, *args), name=name
-        )
+        self._process = mp.Process(target=self._wrapper, args=(Process.lock, fn, *args), name=name)
 
     def start(self):
         self._process.start()

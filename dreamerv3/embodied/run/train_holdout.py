@@ -115,9 +115,7 @@ def train_holdout(agent, env, train_replay, eval_replay, logger, args):
     should_save(step)  # Register that we jused saved.
 
     print("Start training loop.")
-    policy = lambda *args: agent.policy(
-        *args, mode="explore" if should_expl(step) else "train"
-    )
+    policy = lambda *args: agent.policy(*args, mode="explore" if should_expl(step) else "train")
     while step < args.steps:
         # scalars = collections.defaultdict(list)
         # for _ in range(args.eval_samples):

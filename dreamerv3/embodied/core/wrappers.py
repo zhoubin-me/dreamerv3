@@ -225,9 +225,7 @@ class CheckSpaces(base.Wrapper):
         return obs
 
     def _check(self, value, space, key):
-        if not isinstance(
-            value, (np.ndarray, np.generic, list, tuple, int, float, bool)
-        ):
+        if not isinstance(value, (np.ndarray, np.generic, list, tuple, int, float, bool)):
             raise TypeError(f"Invalid type {type(value)} for key {key}.")
         if value in space:
             return
@@ -277,9 +275,7 @@ class ResizeImage(base.Wrapper):
         super().__init__(env)
         self._size = size
         self._keys = [
-            k
-            for k, v in env.obs_space.items()
-            if len(v.shape) > 1 and v.shape[:2] != size
+            k for k, v in env.obs_space.items() if len(v.shape) > 1 and v.shape[:2] != size
         ]
         print(f'Resizing keys {",".join(self._keys)} to {self._size}.')
         if self._keys:
