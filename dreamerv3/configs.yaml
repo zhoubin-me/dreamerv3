@@ -166,7 +166,7 @@ crafter:
 
 dmc_vision:
 
-  task: dmc_walker_walk
+  task: dmc_reacher_easy
   run.train_ratio: 512
   rssm.deter: 512
   .*\.cnn_depth: 32
