@@ -176,11 +176,12 @@ def make_env(config, **overrides):
         "minecraft": "embodied.envs.minecraft:Minecraft",
         "loconav": "embodied.envs.loconav:LocoNav",
         "pinpad": "embodied.envs.pinpad:PinPad",
-        "homebench": "embodied.envs.homebench:HomeBench"
+        "homebench": "embodied.envs.homebench:HomeBenchEmb"
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(":")
         module = importlib.import_module(module)
+        print(module)
         ctor = getattr(module, cls)
     kwargs = config.env.get(suite, {})
     kwargs.update(overrides)
