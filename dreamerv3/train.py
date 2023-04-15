@@ -176,6 +176,7 @@ def make_env(config, **overrides):
         "minecraft": "embodied.envs.minecraft:Minecraft",
         "loconav": "embodied.envs.loconav:LocoNav",
         "pinpad": "embodied.envs.pinpad:PinPad",
+        "homebench": "embodied.envs.homebench:HomeBench"
     }[suite]
     if isinstance(ctor, str):
         module, cls = ctor.split(":")
