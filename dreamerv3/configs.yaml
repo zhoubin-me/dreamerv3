@@ -18,8 +18,8 @@ defaults:
     debug_nans: False
     logical_cpus: 0
     debug: False
-    policy_devices: [0]
-    train_devices: [0]
+    policy_devices: [1]
+    train_devices: [1]
     metrics_every: 10
 
   run:
@@ -181,8 +181,8 @@ homebench_vision:
   .*\.cnn_depth: 32
   .*\.layers: 2
   .*\.units: 512
-  encoder: {mlp_keys: '$^', cnn_keys: '.*'}
-  decoder: {mlp_keys: '$^', cnn_keys: '.*'}
+  encoder: {mlp_keys: '$^', cnn_keys: 'rgbMain'}
+  decoder: {mlp_keys: '$^', cnn_keys: 'rgbMain'}
 
 homebench_proprio:
   task: homebench_reacher
@@ -191,12 +191,12 @@ homebench_proprio:
   .*\.cnn_depth: 32
   .*\.layers: 2
   .*\.units: 512
-  encoder: {mlp_keys: '.*', cnn_keys: '$^'}
-  decoder: {mlp_keys: '.*', cnn_keys: '$^'}
+  encoder: {mlp_keys: 'vec*', cnn_keys: '$^'}
+  decoder: {mlp_keys: 'vec*', cnn_keys: '$^'}
 
 dmc_proprio:
 
-  task: dmc_walker_walk
+  task: dmc_manip_reach_site
   run.train_ratio: 512
   rssm.deter: 512
   .*\.cnn_depth: 32

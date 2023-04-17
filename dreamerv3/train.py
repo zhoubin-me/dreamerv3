@@ -181,7 +181,6 @@ def make_env(config, **overrides):
     if isinstance(ctor, str):
         module, cls = ctor.split(":")
         module = importlib.import_module(module)
-        print(module)
         ctor = getattr(module, cls)
     kwargs = config.env.get(suite, {})
     kwargs.update(overrides)

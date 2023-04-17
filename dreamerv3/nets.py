@@ -108,8 +108,7 @@ class RSSM(nj.Module):
         )
         prior = self.img_step(prev_state, prev_action)
         if len(embed.shape) > len(prior['deter'].shape):
-          embed = embed.reshape(embed.shape[0], -1)
-
+            embed = embed.reshape(embed.shape[0], -1)
         x = jnp.concatenate([prior["deter"], embed], -1)
         x = self.get("obs_out", Linear, **self._kw)(x)
         stats = self._stats("obs_stats", x)
