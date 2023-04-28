@@ -18,13 +18,13 @@ defaults:
     debug_nans: False
     logical_cpus: 0
     debug: False
-    policy_devices: [1]
-    train_devices: [1]
+    policy_devices: [0]
+    train_devices: [0]
     metrics_every: 10
 
   run:
     script: train
-    steps: 1e10
+    steps: 4e7
     expl_until: 0
     log_every: 300
     save_every: 900
@@ -165,14 +165,14 @@ crafter:
   decoder: {mlp_keys: '$^', cnn_keys: 'image'}
 
 dmc_vision:
-  task: dmc_reacher_easy
+  task: dmc_manip_reach_site
   run.train_ratio: 512
   rssm.deter: 512
   .*\.cnn_depth: 32
   .*\.layers: 2
   .*\.units: 512
-  encoder: {mlp_keys: '$^', cnn_keys: 'image'}
-  decoder: {mlp_keys: '$^', cnn_keys: 'image'}
+  encoder: {mlp_keys: '.*', cnn_keys: 'image'}
+  decoder: {mlp_keys: '.*', cnn_keys: 'image'}
 
 homebench_vision:
   task: homebench_reacher

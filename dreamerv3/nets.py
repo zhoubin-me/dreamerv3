@@ -249,6 +249,7 @@ class MultiEncoder(nj.Module):
         data = {k: v.reshape((-1,) + v.shape[len(batch_dims) :]) for k, v in data.items()}
         outputs = []
         if self.cnn_shapes:
+            print("CNN inputs:", [data[k] for k in self.cnn_shapes])
             inputs = jnp.concatenate([data[k] for k in self.cnn_shapes], -1)
             output = self._cnn(inputs)
             output = output.reshape((output.shape[0], -1))
@@ -257,6 +258,7 @@ class MultiEncoder(nj.Module):
             inputs = [
                 data[k][..., None] if len(self.shapes[k]) == 0 else data[k] for k in self.mlp_shapes
             ]
+            print("MLP inputs:", [data[k] for k in self.mlp_shapes])
             inputs = jnp.concatenate([x.astype(f32) for x in inputs], -1)
             inputs = jaxutils.cast_to_compute(inputs)
             outputs.append(self._mlp(inputs))
@@ -311,6 +313,7 @@ class MultiDecoder(nj.Module):
         self._image_dist = image_dist
 
     def __call__(self, inputs, drop_loss_indices=None):
+        print("Entering decoder:", inputs)
         features = self._inputs(inputs)
         dists = {}
         if self.cnn_shapes:
@@ -329,7 +332,9 @@ class MultiDecoder(nj.Module):
                 }
             )
         if self.mlp_shapes:
+            print("Decoder MLP", features)
             dists.update(self._mlp(features))
+        print(dists)
         return dists
 
     def _make_image_dist(self, name, mean):
@@ -353,7 +358,6 @@ class ImageEncoderResnet(nj.Module):
         stages = int(np.log2(x.shape[-2]) - np.log2(self._minres))
         depth = self._depth
         x = jaxutils.cast_to_compute(x) - 0.5
-        # print(x.shape)
         for i in range(stages):
             kw = {**self._kw, "preact": False}
             if self._resize == "stride":
@@ -384,7 +388,6 @@ class ImageEncoderResnet(nj.Module):
         if self._blocks:
             x = get_act(self._kw["act"])(x)
         x = x.reshape((x.shape[0], -1))
-        # print(x.shape)
         return x
 
 

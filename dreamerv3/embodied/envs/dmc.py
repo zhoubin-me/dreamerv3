@@ -24,7 +24,7 @@ class DMC(embodied.Env):
                 domain = "ball_in_cup"
             if domain == "manip":
                 from dm_control import manipulation
-
+                print('*' * 100, task + "_vision")
                 env = manipulation.load(task + "_vision")
             elif domain == "locom":
                 from dm_control.locomotion.examples import basic_rodent_2020
