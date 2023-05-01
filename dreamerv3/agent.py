@@ -131,6 +131,7 @@ class WorldModel(nj.Module):
         shapes = {k: v for k, v in shapes.items() if not k.startswith("log_")}
         print("Entering WW:", shapes, dict(**config.decoder))
         self.encoder = nets.MultiEncoder(shapes, **config.encoder, name="enc")
+        print("Entering RSSM:", dict(config.rssm))
         self.rssm = nets.RSSM(**config.rssm, name="rssm")
         self.heads = {
             "decoder": nets.MultiDecoder(shapes, **config.decoder, name="dec"),
