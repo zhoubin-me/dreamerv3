@@ -1,6 +1,6 @@
 import torch
 
-from torch_model import ImageEncoderResnet, ImageDecoderResnet, MultiEncoder, MultiDecoder
+from torch_model import ImageEncoderResnet, ImageDecoderResnet, MultiEncoder, MultiDecoder, RSSM
 
 def test_image_encoder():
     kw = {'act': 'silu', 'norm': 'layer', 'winit': 'normal', 'fan': 'avg'}
@@ -80,8 +80,39 @@ def test_multi_encoder_decoder():
     print("Multi Decoder data outputs:", out)
 
 
+def test_rssm():
+    rssm_cfg = {'deter': 512, 'units': 512, 'stoch': 32, 'classes': 32, 'act': 'silu', 
+                'norm': 'layer', 'initial': 'learned', 'unimix': 0.01, 'unroll': False, 
+                'action_clip': 1.0, 'winit': 'normal', 'fan': 'avg'}
+    
+    rssm = RSSM(**rssm_cfg)
 
+    data = {
+        'action': torch.rand(16, 64, 2),
+        'image': torch.rand(16, 64, 64, 64, 3),
+        'image_top': torch.rand(16, 64, 64, 64, 3),
+        'reward': torch.rand(16, 64),
+        'is_first': torch.randint(0, 2, (16, 64)),
+        'is_last': torch.rand(16, 64),
+        'is_terminal': torch.rand(16, 64),
+        'position': torch.rand(16, 64, 2),
+        'to_target': torch.rand(16, 64, 2),
+        'velocity': torch.rand(16 ,64, 2),
+        'cont': torch.rand(16, 64),
+        'embed': torch.rand(16, 64, 5120)
+    }
+    
+    state = {
+        'deter': torch.rand(16, 64, 512),
+        'logit': torch.rand(16, 64, 32, 32),
+        'stoch': torch.rand(16, 64, 32, 32),
+        'embed': torch.rand(16, 64, 5120)
+    }
+
+    rssm.observe(data['embed'], data['action'], data['is_first'], state=state)
 
 if __name__ == '__main__':
     # test_image_encoder_decoder()
-    test_multi_encoder_decoder()
+    # test_multi_encoder_decoder()
+
+    test_rssm()

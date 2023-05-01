@@ -32,7 +32,24 @@ class RSSM(nn.Module):
         self._unimix = unimix
         self._action_clip = action_clip
         self._kw = kw
-        self.img_in = nn.Linear(**self._kw)
+        units = kw['units']
+        self.img_in = nn.Sequential(*[
+                nn.Linear(100, units),
+                nn.InstanceNorm1d(units),
+                nn.SiLU()
+        ])
+
+        self.img_out = nn.Sequential(*[
+                nn.Linear(100, units),
+                nn.InstanceNorm1d(units),
+                nn.SiLU()
+        ])
+
+        self.obs_out = nn.Sequential(*[
+                nn.Linear(100, units),
+                nn.InstanceNorm1d(units),
+                nn.SiLU()
+        ])
 
     def initial(self, bs):
         if self._classes:
@@ -59,7 +76,7 @@ class RSSM(nn.Module):
             raise NotImplementedError(self._initial)
 
     def observe(self, embed, action, is_first, state=None):
-        swap = lambda x: x.transpose([1, 0] + list(range(2, len(x.shape))))
+        swap = lambda x: x.permute([1, 0] + list(range(2, len(x.shape))))
         if state is None:
             state = self.initial(action.shape[0])
         step = lambda prev, inputs: self.obs_step(prev[0], *inputs)
@@ -81,8 +98,8 @@ class RSSM(nn.Module):
 
     def get_dist(self, state, argmax=False):
         if self._classes:
-            logit = state["logit"].astype(f32)
-            return tfd.Independent(jaxutils.OneHotDist(logit), 1)
+            logit = state["logit"].float()
+            return tdist.Independent(tdist.OneHotDist(logit), 1)
         else:
             mean = state["mean"].astype(f32)
             std = state["std"].astype(f32)
@@ -105,13 +122,13 @@ class RSSM(nn.Module):
         prior = self.img_step(prev_state, prev_action)
         if len(embed.shape) > len(prior['deter'].shape):
             embed = embed.reshape(embed.shape[0], -1)
-        x = jnp.concatenate([prior["deter"], embed], -1)
-        x = self.get("obs_out", Linear, **self._kw)(x)
+        x = torch.cat([prior["deter"], embed], -1)
+        x = self.obs_out(x)
         stats = self._stats("obs_stats", x)
         dist = self.get_dist(stats)
-        stoch = dist.sample(seed=nj.rng())
+        stoch = dist.sample()
         post = {"stoch": stoch, "deter": prior["deter"], **stats}
-        return cast(post), cast(prior)
+        return post, prior
 
     def img_step(self, prev_state, prev_action):
         prev_stoch = prev_state["stoch"]
@@ -125,14 +142,14 @@ class RSSM(nn.Module):
             shape = prev_action.shape[:-2] + (np.prod(prev_action.shape[-2:]),)
             prev_action = prev_action.reshape(shape)
         x = torch.concatenate([prev_stoch, prev_action], -1)
-        x = self.get("img_in", Linear, **self._kw)(x)
+        x = self.img_in(x)
         x, deter = self._gru(x, prev_state["deter"])
-        x = self.get("img_out", Linear, **self._kw)(x)
+        x = self.img_out(x)
         stats = self._stats("img_stats", x)
         dist = self.get_dist(stats)
-        stoch = dist.sample(seed=nj.rng())
+        stoch = dist.sample()
         prior = {"stoch": stoch, "deter": deter, **stats}
-        return cast(prior)
+        return prior
 
     def get_stoch(self, deter):
         x = self.get("img_out", Linear, **self._kw)(deter)
@@ -151,22 +168,23 @@ class RSSM(nn.Module):
         deter = update * cand + (1 - update) * deter
         return deter, deter
 
-    def _stats(self, name, x):
-        if self._classes:
-            x = self.get(name, Linear, self._stoch * self._classes)(x)
-            logit = x.reshape(x.shape[:-1] + (self._stoch, self._classes))
-            if self._unimix:
-                probs = jax.nn.softmax(logit, -1)
-                uniform = jnp.ones_like(probs) / probs.shape[-1]
-                probs = (1 - self._unimix) * probs + self._unimix * uniform
-                logit = jnp.log(probs)
-            stats = {"logit": logit}
-            return stats
-        else:
-            x = self.get(name, Linear, 2 * self._stoch)(x)
-            mean, std = jnp.split(x, 2, -1)
-            std = 2 * jax.nn.sigmoid(std / 2) + 0.1
-            return {"mean": mean, "std": std}
+    def _stats(self, x):
+        return {"haha": x}
+        # if self._classes:
+        #     x = self.get(name, Linear, self._stoch * self._classes)(x)
+        #     logit = x.reshape(x.shape[:-1] + (self._stoch, self._classes))
+        #     if self._unimix:
+        #         probs = jax.nn.softmax(logit, -1)
+        #         uniform = jnp.ones_like(probs) / probs.shape[-1]
+        #         probs = (1 - self._unimix) * probs + self._unimix * uniform
+        #         logit = jnp.log(probs)
+        #     stats = {"logit": logit}
+        #     return stats
+        # else:
+        #     x = self.get(name, Linear, 2 * self._stoch)(x)
+        #     mean, std = jnp.split(x, 2, -1)
+        #     std = 2 * jax.nn.sigmoid(std / 2) + 0.1
+        #     return {"mean": mean, "std": std}
 
     def _mask(self, value, mask):
         return jnp.einsum("b...,b->b...", value, mask.astype(value.dtype))

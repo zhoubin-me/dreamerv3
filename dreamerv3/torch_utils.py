@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn.functional as F
+import torch.distributions as tdist
 import numpy as np
 import os
 
@@ -12,12 +13,55 @@ def random_seeding(seed=42):
     torch.use_deterministic_algorithms(True)
     os.environ["PYTHONHASHSEED"] = str(seed)
 
-
 def symlog(x):
     return x.sign() * x.abs().add(1.0).log()
 
 def symexp(x):
     return x.sign() * x.abs().exp().add(-1.0)
+
+def scan(fun, carry, xs, reverse=False, unroll=1, modify=False):
+    fun = pure(fun, nested=True)
+    _prerun(fun, carry, jax.tree_util.tree_map(lambda x: x[0], xs))
+    length = len(jax.tree_util.tree_leaves(xs)[0])
+    rngs = rng(length)
+    if modify:
+
+        def inner(carry, x):
+            carry, state = carry
+            x, rng = x
+            (carry, y), state = fun(state, rng, carry, x, create=False)
+            return (carry, state), y
+
+        (carry, state), ys = jax.lax.scan(
+            inner, (carry, dict(context())), (xs, rngs), length, reverse, unroll
+        )
+        context().update(state)
+    else:
+
+        def inner(carry, x):
+            x, rng = x
+            (carry, y), state = fun(dict(context()), rng, carry, x, create=False, modify=False)
+            return carry, y
+
+        carry, ys = jax.lax.scan(inner, carry, (xs, rngs), length, reverse, unroll)
+    return carry, ys
+
+def scan(fn, inputs, start, unroll=True, modify=False):
+    fn2 = lambda carry, inp: (fn(carry, inp),) * 2
+    if not unroll:
+        return nj.scan(fn2, start, inputs, modify=modify)[1]
+    length = len(jax.tree_util.tree_leaves(inputs)[0])
+    carrydef = jax.tree_util.tree_structure(start)
+    carry = start
+    outs = []
+    for index in range(length):
+        carry, out = fn2(carry, tree_map(lambda x: x[index], inputs))
+        flat, treedef = jax.tree_util.tree_flatten(out)
+        assert treedef == carrydef, (treedef, carrydef)
+        outs.append(flat)
+    outs = [jnp.stack([carry[i] for carry in outs], 0) for i in range(len(outs[0]))]
+    return carrydef.unflatten(outs)
+
 
 class MSEDist:
     def __init__(self, mode, dims, agg="sum"):
@@ -116,3 +160,19 @@ class DiscDist:
         )
         log_pred = self.logits - torch.logsumexp(self.logits, -1, keepdims=True)
         return (target * log_pred).sum(-1).sum(self.dims)
+
+
+class OneHotDist(tdist.OneHotCategorical):
+    def __init__(self, logits=None, probs=None):
+        super().__init__(logits, probs)
+
+    @classmethod
+    def _parameter_properties(cls, dtype, num_classes=None):
+        return super()._parameter_properties(dtype)
+
+    def sample(self, sample_shape=()):
+        with torch.no_grad():
+            sample = super().sample(sample_shape)
+        # probs = self._pad(super().probs_parameter(), sample.shape)
+        probs = self.probs
+        return sample.detach() + (probs - probs.detach())
